@@ -87,18 +87,25 @@ export LD_LIBRARY_PATH="$LIBDIR/vendor${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 export TMPDIR="${TMPDIR:-$LIBDIR/tmp}"
 mkdir -p "$TMPDIR" 2>/dev/null || true
 
+# Check if background service was already active before this run
 WAS_RUNNING=0
-if "$BIN" service status >/dev/null 2>&1; then
+INITIAL_STATUS=$("$BIN" service status 2>/dev/null)
+if echo "$INITIAL_STATUS" | grep -q "http"; then
     WAS_RUNNING=1
 fi
 
+cleanup() {
+    if [ "$WAS_RUNNING" -eq 0 ]; then
+        "$BIN" service stop >/dev/null 2>&1 || true
+        # Ensure any orphaned daemon is terminated
+        pkill -u "$(id -u)" -f "$BIN serve" 2>/dev/null || true
+    fi
+}
+
+trap cleanup EXIT INT TERM HUP
+
 "$BIN" "$@"
 EXIT_CODE=$?
-
-if [ "$WAS_RUNNING" = 0 ]; then
-    "$BIN" service stop >/dev/null 2>&1 || true
-fi
-
 exit $EXIT_CODE
 EOF
 chmod +x "$BINDIR/opencode-termux"
