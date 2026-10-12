@@ -82,10 +82,24 @@ cat << 'EOF' > "$BINDIR/opencode-termux"
 export LD_PRELOAD=
 PREFIX="${TERMUX_PREFIX:-/data/data/com.termux/files/usr}"
 LIBDIR="$PREFIX/lib/opencode-termux"
+BIN="$LIBDIR/vendor/opencode"
 export LD_LIBRARY_PATH="$LIBDIR/vendor${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 export TMPDIR="${TMPDIR:-$LIBDIR/tmp}"
 mkdir -p "$TMPDIR" 2>/dev/null || true
-exec "$LIBDIR/vendor/opencode" "$@"
+
+WAS_RUNNING=0
+if "$BIN" service status >/dev/null 2>&1; then
+    WAS_RUNNING=1
+fi
+
+"$BIN" "$@"
+EXIT_CODE=$?
+
+if [ "$WAS_RUNNING" = 0 ]; then
+    "$BIN" service stop >/dev/null 2>&1 || true
+fi
+
+exit $EXIT_CODE
 EOF
 chmod +x "$BINDIR/opencode-termux"
 ln -sf "$BINDIR/opencode-termux" "$BINDIR/opencode"
