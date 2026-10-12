@@ -9,7 +9,7 @@ Standalone, self-contained setup of **OpenCode** for Termux / Android without re
 - **No glibc & No proot:** Uses a custom native musl dynamic loader specifically patched to read DNS from Termux's `$PREFIX/etc/resolv.conf`.
 - **No npm / Node.js required:** Pure standalone shell scripts and native binaries.
 - **Direct Upstream:** Fetches official releases directly from `opencode.ai` and `anomalyco/opencode`.
-- **Self-Contained & Portable:** The `prebuilt/` folder already contains all necessary runtime libraries and the latest binary. You can copy this folder to any new device and install offline!
+- **Lightweight Git Repo:** The repository only contains the essential musl loader and runtime libraries (~6.6MB). The 200MB binary is downloaded and patched automatically on the user's machine on demand.
 
 ---
 
@@ -21,18 +21,27 @@ opencode-termux-v2/
 ├── update.sh       # 1-Click updater (directly pulls from opencode.ai)
 ├── test.sh         # Health check & diagnostics test
 ├── uninstall.sh    # Clean uninstaller
-├── prebuilt/       # Prebuilt musl loader, patchelf, libstdc++, and OpenCode binary
+├── prebuilt/       # Prebuilt musl loader, patchelf, libstdc++
 └── README.md       # Documentation
+```
+
+---
+
+## 📥 Quick Install on any device:
+
+```bash
+git clone https://github.com/ankitkumarbh/opencode-termux-v2.git
+cd opencode-termux-v2
+bash install.sh
 ```
 
 ---
 
 ## 🛠️ Usage
 
-### 1. Install on this device / New device:
+### 1. Run OpenCode:
 ```bash
-cd ~/opencode-termux-v2
-bash install.sh
+opencode
 ```
 
 ### 2. Update to the latest upstream OpenCode:
@@ -49,26 +58,8 @@ cd ~/opencode-termux-v2
 bash test.sh
 ```
 
-### 4. Run OpenCode:
+### 4. Uninstall:
 ```bash
-opencode
+cd ~/opencode-termux-v2
+bash uninstall.sh
 ```
-
----
-
-## 📱 How to move to a NEW device:
-
-1. **Zip this folder on your current device:**
-   ```bash
-   cd ~
-   tar czf opencode-termux.tar.gz opencode-termux-v2/
-   ```
-2. **Transfer `opencode-termux.tar.gz`** to your new phone (via Telegram, Drive, Bluetooth, SD Card, etc.).
-3. **On the new phone (in Termux):**
-   ```bash
-   pkg update -y && pkg install -y tar
-   tar xzf opencode-termux.tar.gz
-   cd opencode-termux
-   bash install.sh
-   ```
-That's it! Zero dependencies, zero manual setup.
