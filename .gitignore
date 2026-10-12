@@ -1,0 +1,10 @@
+# Ignore heavy binary and temporary downloads
+opencode
+prebuilt/opencode
+*.tgz
+*.tar.gz
+*.zip
+*.lock
+tmp/
+*.log
+.DS_Store
