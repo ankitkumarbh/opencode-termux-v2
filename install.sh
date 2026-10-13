@@ -4,6 +4,7 @@
 # Direct upstream support — No glibc, No proot, No author dependency.
 # ==============================================================================
 set -euo pipefail
+unset LD_PRELOAD
 
 SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
 PREFIX="${TERMUX_PREFIX:-/data/data/com.termux/files/usr}"
@@ -64,7 +65,11 @@ chmod +x "$VENDOR_DIR/opencode"
 say "Patching ELF interpreter for native Termux execution..."
 LOADER="$VENDOR_DIR/ld-musl.so"
 PATCHER="$VENDOR_DIR/patchelf"
-"$LOADER" --library-path "$VENDOR_DIR" "$PATCHER" --set-interpreter "$LOADER" "$VENDOR_DIR/opencode"
+if command -v patchelf >/dev/null 2>&1; then
+    patchelf --set-interpreter "$LOADER" "$VENDOR_DIR/opencode"
+else
+    env -u LD_PRELOAD "$LOADER" --library-path "$VENDOR_DIR" "$PATCHER" --set-interpreter "$LOADER" "$VENDOR_DIR/opencode"
+fi
 
 # 6. Ensure Termux DNS config (resolv.conf & hosts)
 mkdir -p "$PREFIX/etc"
@@ -86,6 +91,20 @@ BIN="$LIBDIR/vendor/opencode"
 export LD_LIBRARY_PATH="$LIBDIR/vendor${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 export TMPDIR="${TMPDIR:-$LIBDIR/tmp}"
 mkdir -p "$TMPDIR" 2>/dev/null || true
+
+# Intercept update/upgrade commands to use native Termux updater
+if [ "$#" -gt 0 ]; then
+    case "$1" in
+        update|upgrade)
+            shift
+            if [ -x "$PREFIX/bin/opencode-update" ]; then
+                exec "$PREFIX/bin/opencode-update" "$@"
+            elif [ -x "$HOME/opencode-termux-v2/update.sh" ]; then
+                exec "$HOME/opencode-termux-v2/update.sh" "$@"
+            fi
+            ;;
+    esac
+fi
 
 # Check if background service was already active before this run
 WAS_RUNNING=0

@@ -4,6 +4,7 @@
 # Directly fetches new OpenCode releases from opencode.ai
 # ==============================================================================
 set -euo pipefail
+unset LD_PRELOAD
 
 SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
 PREFIX="${TERMUX_PREFIX:-/data/data/com.termux/files/usr}"
@@ -51,7 +52,11 @@ tar xzf "$TMP_DIR/oc.tgz" -C "$TMP_DIR"
 LOADER="$VENDOR_DIR/ld-musl.so"
 PATCHER="$VENDOR_DIR/patchelf"
 
-"$LOADER" --library-path "$VENDOR_DIR" "$PATCHER" --set-interpreter "$LOADER" "$TMP_DIR/opencode"
+if command -v patchelf >/dev/null 2>&1; then
+    patchelf --set-interpreter "$LOADER" "$TMP_DIR/opencode"
+else
+    env -u LD_PRELOAD "$LOADER" --library-path "$VENDOR_DIR" "$PATCHER" --set-interpreter "$LOADER" "$TMP_DIR/opencode"
+fi
 
 # Replace binary in vendor directory
 mv -f "$TMP_DIR/opencode" "$VENDOR_DIR/opencode"

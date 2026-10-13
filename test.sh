@@ -3,6 +3,7 @@
 # opencode-termux: Diagnostics & Health Check
 # ==============================================================================
 set -euo pipefail
+unset LD_PRELOAD
 
 PREFIX="${TERMUX_PREFIX:-/data/data/com.termux/files/usr}"
 LIBDIR="$PREFIX/lib/opencode-termux"
